@@ -4,8 +4,8 @@ use lang_interpreter::lexer::Lexer;
 #[test]
 fn one_letter_signs_including_whitespaces() {
     test_lex(" ( ", "LEFT_PAREN ( null\n");
-    test_lex(" ! = ", "BANG_EQUAL != null\n");
-    test_lex(" = ==", "EQUAL_EQUAL == null\nEQUAL = null\n");
+    test_lex(" ! = ", "BANG_EQUAL ! = null\n");
+    test_lex(" = ==", "EQUAL_EQUAL = = null\nEQUAL = null\n");
 }
 
 #[test]
@@ -22,11 +22,11 @@ fn one_letter_signs() {
     test_lex("+", "PLUS + null\n");
     test_lex(";", "SEMICOLON ; null\n");
     test_lex("*", "STAR * null\n");
-    test_lex("=", "EQUAL * null\n");
-    test_lex("<", "LESS * null\n");
-    test_lex(">", "GREATER * null\n");
-    test_lex("/", "SLASH * null\n");
-    test_lex("!", "BANG * null\n");
+    test_lex("=", "EQUAL = null\n");
+    test_lex("<", "LESS < null\n");
+    test_lex(">", "GREATER > null\n");
+    test_lex("/", "SLASH / null\n");
+    test_lex("!", "BANG ! null\n");
 }
 
 #[test]
@@ -57,6 +57,9 @@ fn special_keywords() {
 #[test]
 fn strings() {
     test_lex(r#""test""#, "STRING \"test\" test\n");
+    test_lex(r#""\"""#, "STRING \"\"\" \"\n");
+    test_lex(r#""\n""#, "STRING \"\n\" \n\n");
+    test_lex(r#""\t""#, "STRING \"\t\" \t\n");
 }
 
 #[test]
@@ -102,7 +105,7 @@ RIGHT_BRACE } null
 #[test]
 fn full_code2() {
     test_lex(r#"
-VAR test = 3;
+var test = 3;
 test = test + 1.1;
 "#, r#"
 VAR var null
