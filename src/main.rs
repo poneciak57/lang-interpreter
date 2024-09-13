@@ -1,19 +1,29 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
+use lang_interpreter::lexer::Lexer;
+use miette::{Context, IntoDiagnostic};
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Tokenizes the input file
     Tokenize {
+        /// Path to a file that u want to tokenize
         filename: PathBuf
     },
+    /// Parses the AST from an input file
     Parse {
+        /// Path to a file that u want to parse
         filename: PathBuf
     },
+    /// Evaluates the input (It should be provided with single expression)
     Eval {
+        /// Path to a file that u want to evaluate
         filename: PathBuf
     },
+    /// Runs the code
     Run {
+        /// Path to a file that u want to run
         filename: PathBuf
     }
 }
@@ -29,7 +39,18 @@ fn main() -> miette::Result<()> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Tokenize { filename } => todo!(),
+        Commands::Tokenize { filename } => {
+            let file_contents = fs::read_to_string(&filename)
+                .into_diagnostic()
+                .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
+
+            let lexer = Lexer::new(&file_contents);
+            for token in lexer {
+                let token = token?;
+                println!("{token}");
+            }
+            println!("EOF");
+        },
         Commands::Parse { filename } => todo!(),
         Commands::Eval { filename } => todo!(),
         Commands::Run { filename } => todo!(),
