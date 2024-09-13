@@ -55,6 +55,8 @@ pub enum TokenKind {
     TRUE,
     VAR,
     WHILE,
+    BREAK,
+    CONTINUE,
 }
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -98,6 +100,8 @@ impl fmt::Display for Token<'_> {
             TokenKind::TRUE => write!(f, "TRUE {i} null"),
             TokenKind::VAR => write!(f, "VAR {i} null"),
             TokenKind::WHILE => write!(f, "WHILE {i} null"),
+            TokenKind::BREAK => write!(f, "BREAK {i} null"),
+            TokenKind::CONTINUE => write!(f, "CONTINUE {i} null"),
         }
     }
 }

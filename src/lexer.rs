@@ -205,6 +205,8 @@ impl<'de> Iterator for Lexer<'de>
                         "var" => TokenKind::VAR,
                         "while" => TokenKind::WHILE,
                         "print" => TokenKind::PRINT,
+                        "break" => TokenKind::BREAK,
+                        "continue" => TokenKind::CONTINUE,
                         _ => TokenKind::IDENT
                     };
                     return Some(Ok(Token::new(kind, str_rep, c_at)));
