@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
-use lang_interpreter::lexer::Lexer;
+use lang_interpreter::{lexer::Lexer, parser::Parser as MyParser};
 use miette::{Context, IntoDiagnostic};
 
 #[derive(Debug, Subcommand)]
@@ -51,7 +51,14 @@ fn main() -> miette::Result<()> {
             }
             println!("EOF");
         },
-        Commands::Parse { filename } => todo!(),
+        Commands::Parse { filename } => {
+            let file_contents = fs::read_to_string(&filename)
+                .into_diagnostic()
+                .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
+
+            let parser = MyParser::new(&file_contents);
+            println!("{}", parser.parser()?.to_string())
+        },
         Commands::Eval { filename } => todo!(),
         Commands::Run { filename } => todo!(),
     }
