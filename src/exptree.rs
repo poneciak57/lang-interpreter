@@ -19,12 +19,22 @@ pub struct FnCall<'de> {
     ident: &'de str,
     args: Vec<ExprTree<'de>>
 }
+impl<'de> FnCall<'de> {
+    pub fn new(ident: &'de str, args: Vec<ExprTree<'de>>) -> Self {
+        Self { ident, args }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FnBlock<'de> {
     ident: &'de str,
     args: Vec<&'de str>,
     block: Box<ExprTree<'de>>
+}
+impl<'de> FnBlock<'de> {
+    pub fn new(ident: &'de str, args: Vec<&'de str>, block: Box<ExprTree<'de>>) -> Self {
+        Self { ident, args, block }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,11 +43,21 @@ pub struct ConOp<'de> {
     lhs: Box<ExprTree<'de>>,
     rhs: Box<ExprTree<'de>>
 }
+impl<'de> ConOp<'de> {
+    pub fn new(op: Op, lhs: Box<ExprTree<'de>>, rhs: Box<ExprTree<'de>>) -> Self {
+        Self { op, lhs, rhs }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnaryOp<'de> {
-    op: Op,
+    op: UOp,
     lhs: Box<ExprTree<'de>>,
+}
+impl<'de> UnaryOp<'de> {
+    pub fn new(op: UOp, lhs: Box<ExprTree<'de>>) -> Self {
+        Self { op, lhs }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,6 +76,12 @@ pub struct Loop<'de> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct VarDecl<'de> {
+    indent: &'de str,
+    exp: Option<Box<ExprTree<'de>>>
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExprTree<'de> {
     Atom(Atom<'de>),
     ConOp(ConOp<'de>),
@@ -64,7 +90,8 @@ pub enum ExprTree<'de> {
     FnBlock(FnBlock<'de>),
     Block(Vec<ExprTree<'de>>, Option<Box<ExprTree<'de>>>),
     If(If<'de>),
-    Loop(Loop<'de>)
+    Loop(Loop<'de>),
+    Var(VarDecl<'de>)
 }
 
 // Unary operations
@@ -74,7 +101,8 @@ pub enum UOp {
     Bang,
     Print,
     Return,
-    Break
+    Break,
+    Group
 }
 
 
@@ -84,7 +112,6 @@ pub enum Op {
     Plus,
     Star,
     Slash,
-    Group,
 
     BangEqual,
     EqualEqual,
@@ -92,11 +119,9 @@ pub enum Op {
     GreaterEqual,
     Less,
     Greater,
-    Equal,
+    // Equal, // it is not an infix operator
     And,
     Or,
-
-    Var,
 }
 
 
@@ -140,6 +165,12 @@ impl fmt::Display for Loop<'_> {
         write!(f, "(loop {var} {condition} {step} {block})")
     }
 }
+impl fmt::Display for VarDecl<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(var {} {})", self.indent, self.exp.clone().unwrap_or(Box::new(ExprTree::Atom(Atom::Nil))))
+    }
+}
+
 impl fmt::Display for ExprTree<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -157,6 +188,7 @@ impl fmt::Display for ExprTree<'_> {
             },
             ExprTree::If(i) => write!(f, "{i}"),
             ExprTree::Loop(l) => write!(f, "{l}"),
+            ExprTree::Var(v) => write!(f, "{v}"),
         }
     }
 }
@@ -175,11 +207,12 @@ impl fmt::Display for Atom<'_> {
 impl fmt::Display for UOp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Minus => write!(f, "-"),
-            Self::Bang => write!(f, "!"),
-            Self::Print => write!(f, "print"),
-            Self::Return => write!(f, "return"),
-            Self::Break => write!(f, "break"),
+            UOp::Minus => write!(f, "-"),
+            UOp::Bang => write!(f, "!"),
+            UOp::Print => write!(f, "print"),
+            UOp::Return => write!(f, "return"),
+            UOp::Break => write!(f, "break"),
+            UOp::Group => write!(f, "group"),
         }
     }
 }
@@ -190,17 +223,15 @@ impl fmt::Display for Op {
             Self::Plus => write!(f, "+"),
             Self::Star => write!(f, "*"),
             Self::Slash => write!(f, "/"),
-            Self::Group => write!(f, "group"),
             Self::BangEqual => write!(f, "!="),
             Self::EqualEqual => write!(f, "=="),
             Self::LessEqual => write!(f, "<="),
             Self::GreaterEqual => write!(f, ">="),
             Self::Less => write!(f, "<"),
             Self::Greater => write!(f, ">"),
-            Self::Equal => write!(f, "="),
+            // Self::Equal => write!(f, "="),
             Self::And => write!(f, "&&"),
             Self::Or => write!(f, "||"),
-            Self::Var => write!(f, "var"),
         }
     }
 }
