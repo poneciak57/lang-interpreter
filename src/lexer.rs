@@ -2,7 +2,7 @@ use std::mem;
 
 use miette::{Error, LabeledSpan, SourceSpan};
 
-use crate::{error::{SingleTokenError, UnterminatedStringError}, token::{Token, TokenKind}};
+use crate::{error::{Eof, SingleTokenError, UnterminatedStringError}, token::{Token, TokenKind}};
 
 pub struct Lexer<'de> {
     whole: &'de str,
@@ -26,6 +26,22 @@ impl<'de> Lexer<'de> {
         }
         self.peeked = self.next();
         self.peeked.as_ref()
+    }
+    pub fn expect_next(&mut self, next: TokenKind, unexpected: &str) -> Result<Token<'de>, miette::Error> {
+        match self.next() {
+            Some(Ok(token)) if token.kind == next => Ok(token),
+            Some(Ok(token)) => {
+                return Err(miette::miette! {
+                    labels = vec![
+                    LabeledSpan::at(token.offset..token.offset + token.origin.len(), "here"),
+                    ],
+                    help = format!("Expected {next:?}"),
+                    "{unexpected}"
+                }.with_source_code(self.whole.to_string()))
+            },
+            Some(Err(e)) => return Err(e),
+            None => return Err(Eof.into())
+        }
     }
 }
 
