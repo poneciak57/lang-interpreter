@@ -66,6 +66,11 @@ pub struct If<'de> {
     if_block: Box<ExprTree<'de>>,
     else_block: Option<Box<ExprTree<'de>>>
 }
+impl<'de> If<'de> {
+    pub fn new(cond: Box<ExprTree<'de>>, if_block: Box<ExprTree<'de>>, else_block: Option<Box<ExprTree<'de>>>) -> Self {
+        Self { cond, if_block, else_block }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Loop<'de> {
@@ -74,11 +79,21 @@ pub struct Loop<'de> {
     step: Option<Box<ExprTree<'de>>>,
     block: Box<ExprTree<'de>>
 }
+impl<'de> Loop<'de> {
+    pub fn new(condition: Box<ExprTree<'de>>, var: Option<Box<ExprTree<'de>>>, step: Option<Box<ExprTree<'de>>>, block: Box<ExprTree<'de>>) -> Self {
+        Self { condition, var, step, block }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VarDecl<'de> {
     indent: &'de str,
     exp: Option<Box<ExprTree<'de>>>
+}
+impl<'de> VarDecl<'de> {
+    pub fn new(indent: &'de str, exp: Option<Box<ExprTree<'de>>>) -> Self {
+        Self { indent, exp }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
