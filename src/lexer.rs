@@ -43,6 +43,13 @@ impl<'de> Lexer<'de> {
             None => return Err(Eof.into())
         }
     }
+    pub fn next_or_error(&mut self) -> Result<Token<'de>, miette::Error> {
+        match self.next() {
+            Some(Ok(token)) => Ok(token),
+            None => Err(Eof.into()),
+            Some(Err(e)) => Err(e)
+        }
+    }
 }
 
 impl<'de> Iterator for Lexer<'de> 
