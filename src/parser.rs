@@ -226,7 +226,7 @@ impl<'de> Parser<'de> {
             .wrap_err("in for loop's step")?;
         self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
             .wrap_err("in for loop")?;
-        let block = self.parse_statement_within()
+        let block = self.parse_block(false)
             .wrap_err("in for loop's block")?;
 
         let loop_strc = Loop::new(
@@ -248,7 +248,7 @@ impl<'de> Parser<'de> {
             .wrap_err("in while loop's cond")?;
         self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
             .wrap_err("in while loop")?;
-        let block = self.parse_statement_within()
+        let block = self.parse_block(false)
             .wrap_err("in while loop's block")?;
 
         let loop_strc = Loop::new(
@@ -267,11 +267,10 @@ impl<'de> Parser<'de> {
         self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (").wrap_err("in if condition")?;
         let condition = Box::new(self.parse_expression_within(0).wrap_err("in if condition")?);
         self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )").wrap_err("in if condition")?;
-        let yes_stmt = Box::new(self.parse_statement_within().wrap_err("in if expression")?);
-        
+        let yes_stmt = Box::new(self.parse_block(false).wrap_err("in if expression")?);
         let no_stmt = if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::ELSE, .. }))) {
             self.lexer.next(); // we advance lexer, checked above
-            Some(Box::new(self.parse_statement_within()?))
+            Some(Box::new(self.parse_block(false)?))
         } else {
             None
         };
@@ -285,7 +284,7 @@ impl<'de> Parser<'de> {
             self.lexer.expect_next(TokenKind::LEFT_BRACE, "expected block")?;
         }
         let mut stmts: Vec<ExprTree<'de>> = Vec::new();
-        let ret_expr: Option<ExprTree<'de>>;
+        let mut ret_expr: Option<ExprTree<'de>> = None;
         
         loop {
             match self.lexer.peek() {
@@ -295,10 +294,14 @@ impl<'de> Parser<'de> {
                 },
                 Some(Ok(Token { kind: TokenKind::SEMICOLON, ..})) => { 
                     self.lexer.next(); // we advance lexer 
+                    if matches!(self.lexer.peek(), Some(Ok(Token {kind: TokenKind::RIGHT_BRACE, ..}))) {
+                        break;
+                    }
                 },
-                _ => stmts.push(self.parse_statement_within().wrap_err("in block stmt")?),
+                _ => stmts.push(self.parse_statement_within().wrap_err("in block")?),
             }
         };
+        self.lexer.expect_next(TokenKind::RIGHT_BRACE, "expected }")?;
 
         Ok(ExprTree::Block(stmts, ret_expr.map(|e| Box::new(e))))
     }
@@ -372,7 +375,8 @@ impl<'de> Parser<'de> {
 
     #[allow(dead_code)]
     /// ## Skips semicolon
-    /// Checks whether next token is semicolon and skips it. If not semicolon is provided it returns apropriate errror.
+    /// Skips the next character only if it is semicolon
+    /// It also propagates any lexer errors
     fn skip_trailing_semicolon(&mut self) -> Result<(), Error> {
         let peek = self.lexer.peek();
         match peek {
@@ -380,20 +384,11 @@ impl<'de> Parser<'de> {
                 self.lexer.next(); // we advance lexer
                 Ok(())
             }
-            Some(Ok(token)) => {
-                Err(miette::miette! {
-                    labels = vec![
-                        LabeledSpan::at(token.offset..token.offset + token.origin.len(), "here"),
-                    ],
-                    help = format!("Unexpected {token:?}"),
-                    "Expected a semicolon"
-                }.with_source_code(self.whole.to_string()))
-            }
             Some(Err(_)) => {
                 let err = self.lexer.next().unwrap().err().unwrap();
                 Err(err)
             }
-            None => Ok(())
+            _ => Ok(())
         }
     }
 }

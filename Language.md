@@ -116,12 +116,14 @@ var block_value = {
 - can have else statement
 ### Pattern
 ```
-if(<condition_expression>) <yes_statement> else <no_statement>
+if(<condition_expression>) <yes_block> else <no_block>
 ```
-yes and no expressions should be blocks or have trailing semicolon to be treated as statements
+yes and no expressions should be blocks, else is completly optional
+
+if we use if as expression and else block is not present it will return `nil` in else case
 ### Example
 ```
-if (1 < 2) print "yes"; else print "no";
+if (1 < 2) { print "yes"; }
 
 var if_value = if (1 < 2) {
     1
@@ -142,23 +144,24 @@ var if_value = if (1 < 2) {
 - returns `nil` by default
 ### Pattern
 ```
-for(<init_statement>;<condition_expression>;<step_statement>) <loop_statement>
+for(<init_statement>;<condition_expression>;<step_statement>) <loop_block>
 ```
 ```
-while(<condition_expression>) <loop_statement>
+while(<condition_expression>) <loop_block>
 ```
 ### Example
 ```
-for(var i = 1; i < 3; i = i + 1) print i;
+for(var i = 1; i < 3; i = i + 1) {
+    print i;
+}
 
 var for_val = for(var i = 1; i < 3; i = i + 1) {
     if (i == 2) {
         break i;
     }
 };
-
 ```
-
+if we want for loop to return value we can use `break` with epxression right after it, otherwise for loop will return nil
 ---
 
 ## Fn
