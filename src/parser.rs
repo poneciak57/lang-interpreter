@@ -161,6 +161,9 @@ impl<'de> Parser<'de> {
                 Some(Ok(Token { kind: TokenKind::AND, ..})) => Op::And,
                 Some(Ok(Token { kind: TokenKind::OR, ..})) => Op::Or,
 
+                // assigment
+                Some(Ok(Token { kind: TokenKind::EQUAL, ..})) => Op::Equal,
+
                 // ending
                 Some(Ok(Token { kind: TokenKind::RIGHT_PAREN | TokenKind::RIGHT_BRACE | 
                     TokenKind::SEMICOLON | TokenKind::COMMA, .. })) => return Ok(lhs),
@@ -341,7 +344,7 @@ impl<'de> Parser<'de> {
             Op::Less | Op::LessEqual | 
             Op::EqualEqual | Op::GreaterEqual | 
             Op::Greater | Op::BangEqual => (5, 6),
-            // Op::Equal => (1, 2),
+            Op::Equal => (1, 2),
             Op::And | Op::Or => (3, 4),
             // _ => return None,
         };

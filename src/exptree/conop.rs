@@ -16,7 +16,7 @@ pub enum Op {
     GreaterEqual,
     Less,
     Greater,
-    // Equal, // it is not an infix operator
+    Equal,
     And,
     Or,
 }
@@ -53,7 +53,7 @@ impl fmt::Display for Op {
             Self::GreaterEqual => write!(f, ">="),
             Self::Less => write!(f, "<"),
             Self::Greater => write!(f, ">"),
-            // Self::Equal => write!(f, "="),
+            Self::Equal => write!(f, "="),
             Self::And => write!(f, "&&"),
             Self::Or => write!(f, "||"),
         }
