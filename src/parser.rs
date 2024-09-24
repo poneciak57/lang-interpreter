@@ -1,6 +1,6 @@
 use miette::{Context, Error, LabeledSpan};
 
-use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, If, Op, UOp, UnaryOp}, lexer::Lexer, token::{unescape, Token, TokenKind}};
+use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, If, Loop, Op, UOp, UnaryOp}, lexer::Lexer, token::{unescape, Token, TokenKind}};
 
 pub struct Parser<'de> {
     whole: &'de str,
@@ -25,7 +25,7 @@ impl<'de> Parser<'de> {
     pub fn parse_statement_within(&mut self) -> Result<ExprTree<'de>, Error> {
         let stmt_exp = match self.lexer.peek() {
             Some(Ok(Token { kind: TokenKind::RETURN, ..})) => {
-                self.lexer.next();
+                self.lexer.next(); // we advance lexer
                 if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::SEMICOLON, ..}))) {
                     ExprTree::UnaryOp(UnaryOp::new(UOp::Return, Box::new(ExprTree::Atom(Atom::Nil))))
                 } else {
@@ -34,12 +34,12 @@ impl<'de> Parser<'de> {
                 }
             },
             Some(Ok(Token { kind: TokenKind::PRINT, ..})) => {
-                self.lexer.next();
+                self.lexer.next(); // we advance lexer
                 ExprTree::UnaryOp(UnaryOp::new(UOp::Print, 
                     Box::new(self.parse_expression_within(0).wrap_err("in statement")?)))
             },
             Some(Ok(Token { kind: TokenKind::BREAK, ..})) => {
-                self.lexer.next();
+                self.lexer.next(); // we advance lexer
                 if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::SEMICOLON, ..}))) {
                     ExprTree::UnaryOp(UnaryOp::new(UOp::Break, Box::new(ExprTree::Atom(Atom::Nil))))
                 } else {
@@ -48,7 +48,7 @@ impl<'de> Parser<'de> {
                 }
             },
             Some(Ok(Token { kind: TokenKind::CONTINUE, ..})) => {
-                self.lexer.next();
+                self.lexer.next(); // we advance lexer
                 ExprTree::Atom(Atom::Continue)
             },
             Some(Ok(Token { kind: TokenKind::VAR, ..})) => 
@@ -63,6 +63,9 @@ impl<'de> Parser<'de> {
                 self.parse_for(false).wrap_err("in statement")?,
             Some(Ok(Token { kind: TokenKind::LEFT_BRACE, ..})) => 
                 self.parse_block(false).wrap_err("in statement")?,
+            Some(Ok(Token { kind: TokenKind::SEMICOLON, ..})) => { // empty semicolon is statement
+                ExprTree::Atom(Atom::Nil)
+            },
             Some(Err(_)) => return Err(self.lexer.next().unwrap().err().unwrap()),
             None => return Err(Eof.into()),
             _ => self.parse_expression_within(0).wrap_err("in statement")?
@@ -194,7 +197,7 @@ impl<'de> Parser<'de> {
     /// - function call
     fn parse_ident(&mut self, name: &'de str) -> ExprTree<'de> {
         if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::LEFT_PAREN, .. }))) {
-            self.lexer.next();
+            self.lexer.next(); // we advance lexer
             // its a function call
             todo!()
         }
@@ -206,7 +209,29 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::FOR, "expected for loop")?;
         }
-        todo!()
+        self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
+            .wrap_err("in for loop")?;
+        let init = self.parse_statement_within()
+            .wrap_err("in for loop's init")?;
+        self.lexer.expect_next(TokenKind::SEMICOLON, "expected ;")
+            .wrap_err("in for loop")?;
+        let cond = self.parse_statement_within()
+            .wrap_err("in for loop's cond")?;
+        self.lexer.expect_next(TokenKind::SEMICOLON, "expected ;")
+            .wrap_err("in for loop")?;
+        let step = self.parse_statement_within()
+            .wrap_err("in for loop's step")?;
+        self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
+            .wrap_err("in for loop")?;
+        let block = self.parse_statement_within()
+            .wrap_err("in for loop's block")?;
+
+        let loop_strc = Loop::new(
+            Box::new(cond), 
+            Some(Box::new(init)), 
+            Some(Box::new(step)), 
+            Box::new(block));
+        Ok(ExprTree::Loop(loop_strc))
     }
 
     /// ## Parses while loop
@@ -214,7 +239,21 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::WHILE, "expected while loop")?;
         }
-        todo!()
+        self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
+            .wrap_err("in while loop")?;
+        let cond = self.parse_statement_within()
+            .wrap_err("in while loop's cond")?;
+        self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
+            .wrap_err("in while loop")?;
+        let block = self.parse_statement_within()
+            .wrap_err("in while loop's block")?;
+
+        let loop_strc = Loop::new(
+            Box::new(cond), 
+            None, 
+            None, 
+            Box::new(block));
+        Ok(ExprTree::Loop(loop_strc))
     }
 
     /// ## Parses if
@@ -228,7 +267,7 @@ impl<'de> Parser<'de> {
         let yes_stmt = Box::new(self.parse_statement_within().wrap_err("in if expression")?);
         
         let no_stmt = if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::ELSE, .. }))) {
-            self.lexer.next().unwrap()?; // checked above
+            self.lexer.next(); // we advance lexer, checked above
             Some(Box::new(self.parse_statement_within()?))
         } else {
             None
@@ -242,7 +281,23 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::LEFT_BRACE, "expected block")?;
         }
-        todo!()
+        let mut stmts: Vec<ExprTree<'de>> = Vec::new();
+        let ret_expr: Option<ExprTree<'de>>;
+        
+        loop {
+            match self.lexer.peek() {
+                Some(Ok(Token { kind: TokenKind::RIGHT_BRACE, ..})) => {
+                    ret_expr = stmts.pop();
+                    break;
+                },
+                Some(Ok(Token { kind: TokenKind::SEMICOLON, ..})) => { 
+                    self.lexer.next(); // we advance lexer 
+                },
+                _ => stmts.push(self.parse_statement_within().wrap_err("in block stmt")?),
+            }
+        };
+
+        Ok(ExprTree::Block(stmts, ret_expr.map(|e| Box::new(e))))
     }
 
     /// ## Parses function declaration
@@ -250,6 +305,12 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::FUN, "expected fun")?;
         }
+        self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
+            .wrap_err("in function decl")?;
+        while !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
+            todo!() // parse idents
+        }
+        self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")?;
         todo!()
     }
 
@@ -302,7 +363,7 @@ impl<'de> Parser<'de> {
         let peek = self.lexer.peek();
         match peek {
             Some(Ok(Token { kind: TokenKind::SEMICOLON, ..})) => {
-                self.lexer.next();
+                self.lexer.next(); // we advance lexer
                 Ok(())
             }
             Some(Ok(token)) => {
