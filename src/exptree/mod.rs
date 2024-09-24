@@ -57,7 +57,7 @@ impl fmt::Display for ExprTree<'_> {
                 if let Some(ref ret) = ret_exp {
                     statements.push(ret.to_string())
                 }
-                write!(f, "(block {})", statements.join(", "))
+                write!(f, "(block {})", statements.join(" "))
             },
             ExprTree::If(i) => write!(f, "{i}"),
             ExprTree::Loop(l) => write!(f, "{l}"),
