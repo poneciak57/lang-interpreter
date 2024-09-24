@@ -57,7 +57,7 @@ fn main() -> miette::Result<()> {
                 .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
 
             let parser = MyParser::new(&file_contents);
-            println!("{}", parser.parser()?.to_string())
+            println!("{}", parser.parse()?.to_string())
         },
         Commands::Eval { filename } => todo!(),
         Commands::Run { filename } => todo!(),

@@ -12,7 +12,7 @@ impl<'de> Parser<'de> {
         Self { whole: input, lexer: Lexer::new(input) }
     }
 
-    pub fn parser(self) -> Result<ExprTree<'de>, Error> {
+    pub fn parse(self) -> Result<ExprTree<'de>, Error> {
         todo!()
     }
 
