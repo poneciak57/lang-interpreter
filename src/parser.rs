@@ -1,6 +1,6 @@
 use miette::{Context, Error, LabeledSpan};
 
-use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, If, Loop, Op, UOp, UnaryOp}, lexer::Lexer, token::{unescape, Token, TokenKind}};
+use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, If, Loop, Op, UOp, UnaryOp, VarDecl}, lexer::Lexer, token::{unescape, Token, TokenKind}};
 
 pub struct Parser<'de> {
     whole: &'de str,
@@ -322,7 +322,17 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::VAR, "expected var")?;
         }
-        todo!()
+        let ident = self.lexer.expect_next(TokenKind::IDENT, "expected ident")
+            .wrap_err("in variable declaration")?.origin;
+        if !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::EQUAL, ..}))) {
+            return Ok(ExprTree::Var(VarDecl::new(ident, None)))
+        }
+        self.lexer.expect_next(TokenKind::EQUAL, "expected =")
+            .wrap_err("in variable declaration")?;
+        let expr = self.parse_expression_within(0)
+            .wrap_err("in variable declaration")?;
+        let var_decl = VarDecl::new(ident, Some(Box::new(expr)));
+        Ok(ExprTree::Var(var_decl))
     }
 
     /// ## Prefix bp
