@@ -331,7 +331,7 @@ impl<'de> Parser<'de> {
         match uop {
             UOp::Minus | UOp::Bang => ((), 20),
             UOp::Group | UOp::Break | UOp::Return | UOp::Print => panic!("Groups and statements should be handled independently"),
-            _ => panic!("Should never be called on non prefix operator")
+            // _ => panic!("Should never be called on non prefix operator")
         }
     }
     
@@ -360,6 +360,7 @@ impl<'de> Parser<'de> {
         None
     } 
 
+    #[allow(dead_code)]
     /// ## Skips semicolon
     /// Checks whether next token is semicolon and skips it. If not semicolon is provided it returns apropriate errror.
     fn skip_trailing_semicolon(&mut self) -> Result<(), Error> {
@@ -378,7 +379,7 @@ impl<'de> Parser<'de> {
                     "Expected a semicolon"
                 }.with_source_code(self.whole.to_string()))
             }
-            Some(Err(e)) => {
+            Some(Err(_)) => {
                 let err = self.lexer.next().unwrap().err().unwrap();
                 Err(err)
             }

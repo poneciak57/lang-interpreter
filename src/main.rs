@@ -59,8 +59,8 @@ fn main() -> miette::Result<()> {
             let parser = MyParser::new(&file_contents);
             println!("{}", parser.parse()?.to_string())
         },
-        Commands::Eval { filename } => todo!(),
-        Commands::Run { filename } => todo!(),
+        Commands::Eval { filename: _ } => todo!(),
+        Commands::Run { filename: _ } => todo!(),
     }
 
     Ok(())
