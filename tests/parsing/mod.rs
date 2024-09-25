@@ -33,3 +33,71 @@ pub fn test_parse_expr(inp: &str, expected_out: &str) {
     let out = parser.parse_expression_within(0).unwrap().to_string();
     assert_eq!(&out, expected_out);
 }
+
+#[macro_export]
+macro_rules! test_parse {
+    ($name:ident, EXP, $inp:literal, $out:literal) => {
+        #[test]
+        fn $name() {
+            test_parse_expr($inp, $out);
+        }
+    };
+    ($name:ident, STMT, $inp:literal, $out:literal) => {
+        #[test]
+        fn $name() {
+            test_parse_stmt($inp, $out);
+        }
+    };
+    ($name:ident, $inp:literal, $out:literal) => {
+        mod $name {
+            use super::*;
+
+            test_parse!(statement, STMT, $inp, $out);
+            test_parse!(expression, EXP, $inp, $out);
+        }
+    };
+    ($name:ident, ERROR, $inp:literal) => {
+        mod $name {
+            use super::*;
+            
+            test_parse!(statement, STMT, ERROR, $inp);
+            test_parse!(expression, EXP, ERROR, $inp);
+        }
+    };
+    ($name:ident, OK, $inp:literal) => {
+        mod $name {
+            use super::*;
+            
+            test_parse!(statement, STMT, OK, $inp);
+            test_parse!(expression, EXP, OK, $inp);
+        }
+    };
+
+
+    ($name:ident, EXP, OK, $inp:literal) => {
+        #[test]
+        fn $name() {
+            unwrap_parse_expr($inp);
+        }
+    };
+    ($name:ident, EXP, ERROR, $inp:literal) => {
+        #[test]
+        #[should_panic]
+        fn $name() {
+            unwrap_parse_expr($inp);
+        }
+    };
+    ($name:ident, STMT, OK, $inp:literal) => {
+        #[test]
+        fn $name() {
+            unwrap_parse_stmt($inp);
+        }
+    };
+    ($name:ident, STMT, ERROR, $inp:literal) => {
+        #[test]
+        #[should_panic]
+        fn $name() {
+            unwrap_parse_stmt($inp);
+        }
+    };
+}
