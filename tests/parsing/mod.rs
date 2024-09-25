@@ -1,7 +1,8 @@
 use lang_interpreter::parser::Parser;
 
 mod iff;
-mod forr;
+mod for_loop;
+mod while_loop;
 mod fnn;
 mod block;
 mod var;
