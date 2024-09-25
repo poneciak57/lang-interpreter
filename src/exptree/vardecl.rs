@@ -18,6 +18,6 @@ impl<'de> VarDecl<'de> {
 
 impl fmt::Display for VarDecl<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(var {} {})", self.indent, self.exp)
+        write!(f, "(var id({}) {})", self.indent, self.exp)
     }
 }

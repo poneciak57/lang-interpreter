@@ -214,16 +214,31 @@ impl<'de> Parser<'de> {
         }
         self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
             .wrap_err("in for loop")?;
-        let init = self.parse_statement_within()
-            .wrap_err("in for loop's init")?;
+        let init = 
+        if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::SEMICOLON, ..}))) {
+            None
+        } else {
+            Some(Box::new(self.parse_statement_within()
+                .wrap_err("in for loop's init")?))
+        };
         self.lexer.expect_next(TokenKind::SEMICOLON, "expected ;")
             .wrap_err("in for loop")?;
-        let cond = self.parse_statement_within()
-            .wrap_err("in for loop's cond")?;
+        let cond = 
+        if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::SEMICOLON, ..}))) {
+            ExprTree::Atom(Atom::Bool(true))
+        } else {
+            self.parse_statement_within()
+                .wrap_err("in for loop's cond")?
+        };
         self.lexer.expect_next(TokenKind::SEMICOLON, "expected ;")
             .wrap_err("in for loop")?;
-        let step = self.parse_statement_within()
-            .wrap_err("in for loop's step")?;
+        let step = 
+        if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
+            None
+        } else {
+            Some(Box::new(self.parse_statement_within()
+            .wrap_err("in for loop's step")?))
+        };
         self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
             .wrap_err("in for loop")?;
         let block = self.parse_block(false)
@@ -231,8 +246,8 @@ impl<'de> Parser<'de> {
 
         let loop_strc = Loop::new(
             Box::new(cond), 
-            Some(Box::new(init)), 
-            Some(Box::new(step)), 
+            init, 
+            step, 
             Box::new(block));
         Ok(ExprTree::Loop(loop_strc))
     }
@@ -327,7 +342,7 @@ impl<'de> Parser<'de> {
         }
         let ident = self.lexer.expect_next(TokenKind::IDENT, "expected ident")
             .wrap_err("in variable declaration")?.origin;
-        if !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::EQUAL, ..}))) {
+        if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::SEMICOLON, ..}))) {
             return Ok(ExprTree::Var(VarDecl::new(ident, None)))
         }
         self.lexer.expect_next(TokenKind::EQUAL, "expected =")
