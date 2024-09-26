@@ -1,6 +1,6 @@
 use miette::{Context, Error, LabeledSpan};
 
-use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, If, Loop, Op, UOp, UnaryOp, VarDecl}, lexer::Lexer, token::{unescape, Token, TokenKind}};
+use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, FnCall, If, Loop, Op, UOp, UnaryOp, VarDecl}, lexer::Lexer, token::{unescape, Token, TokenKind}};
 
 pub struct Parser<'de> {
     whole: &'de str,
@@ -98,7 +98,7 @@ impl<'de> Parser<'de> {
             Token { kind: TokenKind::TRUE, .. } => ExprTree::Atom(Atom::Bool(true)),
             Token { kind: TokenKind::FALSE, .. } => ExprTree::Atom(Atom::Bool(false)),
             Token { kind: TokenKind::CONTINUE, .. } => ExprTree::Atom(Atom::Continue),
-            Token { kind: TokenKind::IDENT, origin, .. } => self.parse_ident(origin),
+            Token { kind: TokenKind::IDENT, origin, .. } => self.parse_ident(origin)?,
             // prefix/unary
             Token { kind: TokenKind::BANG | TokenKind::MINUS, ..} => {
                 let uop = match lhs.kind {
@@ -198,13 +198,31 @@ impl<'de> Parser<'de> {
     /// something starting from ident can be either:
     /// - ident itself (variable reference)
     /// - function call
-    fn parse_ident(&mut self, name: &'de str) -> ExprTree<'de> {
+    fn parse_ident(&mut self, name: &'de str) -> Result<ExprTree<'de>, Error> {
         if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::LEFT_PAREN, .. }))) {
             self.lexer.next(); // we advance lexer
-            // its a function call
-            todo!()
+            let mut arg_list = Vec::new();
+            loop {
+                let expr = self.parse_expression_within(0)?;
+                arg_list.push(expr);
+                match self.lexer.peek() {
+                    Some(Ok(Token { kind: TokenKind::COMMA, .. })) => { self.lexer.next(); continue; },
+                    Some(Ok(Token { kind: TokenKind::LEFT_PAREN, .. })) => break,
+                    None => return Err(Eof.into()),
+                    Some(Ok(token)) => return Err(miette::miette! {
+                        labels = vec![
+                            LabeledSpan::at(token.offset..token.offset + token.origin.len(), "here"),
+                        ],
+                        help = format!("Unexpected {token:?}"),
+                        "Expected end of argument list or comma"
+                    }.with_source_code(self.whole.to_string())),
+                    Some(Err(_)) => return Err(self.lexer.next().unwrap().err().unwrap())
+                }
+            }
+            Ok(ExprTree::FnCall(FnCall::new(name, arg_list)))
+        } else {
+            Ok(ExprTree::Atom(Atom::Ident(name)))
         }
-        ExprTree::Atom(Atom::Ident(name))
     }
 
     /// ## Parses for loop
