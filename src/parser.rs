@@ -1,6 +1,6 @@
 use miette::{Context, Error, LabeledSpan};
 
-use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, FnCall, If, Loop, Op, UOp, UnaryOp, VarDecl}, lexer::Lexer, token::{unescape, Token, TokenKind}};
+use crate::{error::Eof, exptree::{Atom, ConOp, ExprTree, FnBlock, FnCall, If, Loop, Op, UOp, UnaryOp, VarDecl}, lexer::Lexer, token::{unescape, Token, TokenKind}};
 
 pub struct Parser<'de> {
     whole: &'de str,
@@ -344,13 +344,20 @@ impl<'de> Parser<'de> {
         if !skip_first_keyword {
             self.lexer.expect_next(TokenKind::FUN, "expected fun")?;
         }
+        let ident = self.lexer.expect_next(TokenKind::IDENT, "expected function name")?.origin;
         self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
             .wrap_err("in function decl")?;
+
+        let mut args = Vec::new();
         while !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
-            todo!() // parse idents
+            let arg = self.lexer.expect_next(TokenKind::IDENT, "expected parameter name")
+                .wrap_err(format!("in function {} params", ident))?
+                .origin;
+            args.push(arg);
         }
         self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")?;
-        todo!()
+        let block = self.parse_block(false)?;
+        Ok(ExprTree::FnBlock(FnBlock::new(ident, args, Box::new(block))))
     }
 
     /// ## Parses var declaration
