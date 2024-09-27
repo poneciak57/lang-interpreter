@@ -12,8 +12,16 @@ impl<'de> Parser<'de> {
         Self { whole: input, lexer: Lexer::new(input) }
     }
 
-    pub fn parse(self) -> Result<ExprTree<'de>, Error> {
-        todo!()
+    pub fn parse(mut self) -> Result<Vec<ExprTree<'de>>, Error> {
+        let mut stmts: Vec<ExprTree<'de>> = Vec::new();
+        loop {
+            match self.lexer.peek() {
+                Some(Ok(Token { kind: TokenKind::SEMICOLON, ..})) => { self.lexer.next(); },
+                Some(_) => stmts.push(self.parse_statement_within()?),
+                None => break
+            }
+        }
+        Ok(stmts)
     }
 
     /// ## Parses statement
@@ -202,12 +210,19 @@ impl<'de> Parser<'de> {
         if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::LEFT_PAREN, .. }))) {
             self.lexer.next(); // we advance lexer
             let mut arg_list = Vec::new();
+            if matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
+                self.lexer.next(); // we advance the right paren
+                return Ok(ExprTree::FnCall(FnCall::new(name, arg_list)));
+            }
             loop {
                 let expr = self.parse_expression_within(0)?;
                 arg_list.push(expr);
                 match self.lexer.peek() {
                     Some(Ok(Token { kind: TokenKind::COMMA, .. })) => { self.lexer.next(); continue; },
-                    Some(Ok(Token { kind: TokenKind::LEFT_PAREN, .. })) => break,
+                    Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, .. })) => {
+                        self.lexer.next(); // we advance the right paren
+                        break;
+                    },
                     None => return Err(Eof.into()),
                     Some(Ok(token)) => return Err(miette::miette! {
                         labels = vec![

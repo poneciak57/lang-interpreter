@@ -57,7 +57,12 @@ fn main() -> miette::Result<()> {
                 .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
 
             let parser = MyParser::new(&file_contents);
-            println!("{}", parser.parse()?.to_string())
+            let parsed_str = parser.parse()?
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<String>>()
+                .join("\n");
+            println!("{}", parsed_str)
         },
         Commands::Eval { filename: _ } => todo!(),
         Commands::Run { filename: _ } => todo!(),
