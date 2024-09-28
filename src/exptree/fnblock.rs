@@ -17,7 +17,7 @@ impl<'de> FnBlock<'de> {
 
 impl fmt::Display for FnBlock<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let args = self.args.iter().map(|e| e.to_string()).collect::<String>();
-        write!(f, "(fn {} {} {})", self.ident, args, self.block)
+        let args = self.args.iter().map(|e| e.to_string()).collect::<Vec<String>>().join(" ");
+        write!(f, "(fun {} ({}) {})", self.ident, args, self.block)
     }
 }

@@ -361,17 +361,36 @@ impl<'de> Parser<'de> {
         }
         let ident = self.lexer.expect_next(TokenKind::IDENT, "expected function name")?.origin;
         self.lexer.expect_next(TokenKind::LEFT_PAREN, "expected (")
-            .wrap_err("in function decl")?;
+            .wrap_err(format!("in function {} params", ident))?;
 
         let mut args = Vec::new();
-        while !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
-            let arg = self.lexer.expect_next(TokenKind::IDENT, "expected parameter name")
-                .wrap_err(format!("in function {} params", ident))?
-                .origin;
-            args.push(arg);
+        if !matches!(self.lexer.peek(), Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..}))) {
+            loop {
+                let arg = self.lexer.expect_next(TokenKind::IDENT, "expected parameter name")
+                    .wrap_err(format!("in function {} params", ident))?
+                    .origin;
+                args.push(arg);
+                match self.lexer.peek() {
+                    Some(Ok(Token { kind: TokenKind::COMMA, ..})) => {
+                        self.lexer.next();
+                    }, 
+                    Some(Ok(Token { kind: TokenKind::RIGHT_PAREN, ..})) => break,
+                    None => return Err(Eof.into()),
+                    Some(Ok(token)) => return Err(miette::miette! {
+                        labels = vec![
+                            LabeledSpan::at(token.offset..token.offset + token.origin.len(), "here"),
+                        ],
+                        help = format!("Unexpected {token:?} in function {ident} parameters"),
+                        "Expected end of parameters list"
+                    }.with_source_code(self.whole.to_string())),
+                    Some(Err(_)) => return Err(self.lexer.next().unwrap().err().unwrap())
+                }
+            }
         }
-        self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")?;
-        let block = self.parse_block(false)?;
+        self.lexer.expect_next(TokenKind::RIGHT_PAREN, "expected )")
+            .wrap_err(format!("in function {} params", ident))?;
+        let block = self.parse_block(false)
+            .wrap_err(format!("in function {} block", ident))?;
         Ok(ExprTree::FnBlock(FnBlock::new(ident, args, Box::new(block))))
     }
 

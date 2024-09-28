@@ -3,7 +3,7 @@ use lang_interpreter::parser::Parser;
 mod iff;
 mod for_loop;
 mod while_loop;
-mod fnn;
+mod fun;
 mod block;
 mod var;
 mod arithmetics;
