@@ -8,6 +8,7 @@ mod block;
 mod var;
 mod arithmetics;
 mod ident;
+mod overall;
 
 // for testing if something can be parsed as statement without an error
 pub fn unwrap_parse_stmt(inp: &str) {
