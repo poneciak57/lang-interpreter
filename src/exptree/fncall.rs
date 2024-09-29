@@ -20,7 +20,7 @@ impl fmt::Display for FnCall<'_> {
         if args.is_empty() {
             write!(f, "(call {})", self.ident)
         } else {
-            write!(f, "(call {} {})", self.ident, args.join(" "))
+            write!(f, "(call {} ({}))", self.ident, args.join(" "))
         }
     }
 }
