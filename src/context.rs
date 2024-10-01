@@ -55,8 +55,8 @@ impl CtxTree {
     }
 
     fn set(&self, name: &str, value: Value) -> Result<(), CtxError> {
-        if let Some(v) = self.0.borrow().vars.get(name) {
-            
+        if let Some(_) = self.0.borrow().vars.get(name) {
+            self.0.borrow_mut().vars.insert(name.to_string(), value);
             Ok(())
         } else if let Some(ref prev) = self.0.borrow().prev {
             prev.set(name, value)
