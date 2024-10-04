@@ -1,5 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+use crate::exptree::{ExprTree, FnBlock};
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -17,20 +19,21 @@ pub enum CtxError {
 }
 
 #[derive(Clone)]
-pub struct CtxTree(Rc<RefCell<Context>>);
+pub struct CtxTree<'de> (Rc<RefCell<Context<'de>>>);
 
 
-struct Context {
+struct Context<'de> {
     vars: HashMap<String, Value>,
-    prev: Option<CtxTree>
+    funcs: HashMap<String, FnBlock<'de>>,
+    prev: Option<CtxTree<'de>>
 }
 
-impl CtxTree {
+impl<'de> CtxTree<'de> {
 
     /// ## Creates new context tree
     /// creates new rooted tree of context returning the root
     pub fn new() -> Self {
-        Self(Rc::new(RefCell::new(Context { vars: HashMap::new(), prev: None })))
+        Self(Rc::new(RefCell::new(Context { vars: HashMap::new(), funcs: HashMap::new(), prev: None })))
     }
 
     /// ## Forks the tree
@@ -39,6 +42,7 @@ impl CtxTree {
     fn fork(&self) -> Self {
         let ctx: Context = Context {
             vars: HashMap::new(),
+            funcs: HashMap::new(),
             prev: Some(self.clone())
         };
         Self(Rc::new(RefCell::new(ctx)))
@@ -59,6 +63,26 @@ impl CtxTree {
         None
     }
 
+    // ## Inserts the new function
+    // If the function with that name already exists it overides it
+    fn insert_fn(&self, name: &'de str,  fun: FnBlock<'de>) {
+        let mut ctx = self.0.borrow_mut();
+        ctx.funcs.insert(name.to_string(), fun);
+    }
+
+    // ## Executes function
+    // executes function with given name and arguments
+    // returns None if no function with given name exists in current scope
+    fn exec_fn(&self, name: &str, args: Vec<Value>) -> Option<Value> {
+        let ctx = &self.0;
+        if let Some(f) = ctx.borrow().funcs.get(name) {
+            return Some(f.exec(self, args));
+        }
+        if let Some(ref prev) = ctx.borrow().prev {
+            return prev.exec_fn(name, args);
+        }
+        None
+    }
 
     /// ## Inserts the new value
     /// it inserts or owewrites the value in current node

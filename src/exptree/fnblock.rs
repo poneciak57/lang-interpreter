@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::context::Value;
+
 use super::ExprTree;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -12,6 +14,11 @@ pub struct FnBlock<'de> {
 impl<'de> FnBlock<'de> {
     pub fn new(ident: &'de str, args: Vec<&'de str>, block: Box<ExprTree<'de>>) -> Self {
         Self { ident, args, block }
+    }
+
+    pub fn exec(&self, ctx: &crate::context::CtxTree, args: Vec<Value>) -> Value {
+        // it will map names to the values and declare them on forked ctx
+        todo!()
     }
 }
 
