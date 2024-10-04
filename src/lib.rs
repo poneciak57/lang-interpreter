@@ -4,3 +4,4 @@ pub mod error;
 pub mod exptree;
 pub mod parser;
 pub mod context;
+pub mod evaluator;
