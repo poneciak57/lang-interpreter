@@ -1,4 +1,5 @@
 use std::fmt;
+use miette::Error;
 
 use crate::{context::Value, evaluator::Eval};
 
@@ -11,7 +12,7 @@ pub struct FnCall<'de> {
 }
 
 impl<'de> Eval for FnCall<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
         todo!()
     }
 }

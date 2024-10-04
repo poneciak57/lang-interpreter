@@ -1,4 +1,5 @@
 use std::fmt;
+use miette::Error;
 
 use crate::{context::Value, evaluator::Eval, exptree::Atom};
 
@@ -11,7 +12,7 @@ pub struct VarDecl<'de> {
 }
 
 impl<'de> Eval for VarDecl<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
         todo!()
     }
 }

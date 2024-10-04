@@ -15,6 +15,7 @@ pub use fnblock::*;
 pub use fncall::*;
 pub use if_struct::*;
 pub use loop_struct::*;
+use miette::Error;
 pub use uop::*;
 pub use vardecl::*;
 
@@ -31,7 +32,7 @@ pub enum Atom<'de> {
 }
 
 impl<'de> Eval for Atom<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error>  {
         todo!()
     }
 }
@@ -52,7 +53,7 @@ pub enum ExprTree<'de> {
 }
 
 impl<'de> Eval for ExprTree<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
         todo!()
     }
 }

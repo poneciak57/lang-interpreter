@@ -1,4 +1,5 @@
 use std::fmt;
+use miette::Error;
 
 use crate::{context::Value, evaluator::Eval};
 
@@ -22,7 +23,7 @@ pub struct UnaryOp<'de> {
 }
 
 impl<'de> Eval for UnaryOp<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
         todo!()
     }
 }

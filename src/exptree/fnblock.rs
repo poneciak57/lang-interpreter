@@ -1,4 +1,5 @@
 use std::fmt;
+use miette::Error;
 
 use crate::{context::Value, evaluator::Eval};
 
@@ -12,7 +13,7 @@ pub struct FnBlock<'de> {
 }
 
 impl<'de> Eval for FnBlock<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
         // here we just add fn to context
         todo!()
     }

@@ -28,3 +28,9 @@ pub struct UnterminatedStringError {
     #[label = "here"]
     pub(crate) err_span: SourceSpan,
 }
+
+#[derive(Diagnostic, Debug, Error)]
+#[error("Runtime error")]
+pub struct DefaultRuntimeError {
+
+}
