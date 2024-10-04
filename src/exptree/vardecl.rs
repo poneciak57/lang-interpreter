@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::exptree::Atom;
+use crate::{context::Value, evaluator::Eval, exptree::Atom};
 
 use super::ExprTree;
 
@@ -9,6 +9,13 @@ pub struct VarDecl<'de> {
     indent: &'de str,
     exp: Box<ExprTree<'de>>
 }
+
+impl<'de> Eval for VarDecl<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
 
 impl<'de> VarDecl<'de> {
     pub fn new(indent: &'de str, exp: Option<Box<ExprTree<'de>>>) -> Self {

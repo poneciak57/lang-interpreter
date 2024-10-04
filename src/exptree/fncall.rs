@@ -1,11 +1,19 @@
 use std::fmt;
 
+use crate::{context::Value, evaluator::Eval};
+
 use super::ExprTree;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FnCall<'de> {
     ident: &'de str,
     args: Vec<ExprTree<'de>>
+}
+
+impl<'de> Eval for FnCall<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
 }
 
 impl<'de> FnCall<'de> {

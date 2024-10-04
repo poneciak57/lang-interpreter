@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::{context::Value, evaluator::Eval};
+
 use super::ExprTree;
 
 // Unary operations
@@ -18,6 +20,13 @@ pub struct UnaryOp<'de> {
     op: UOp,
     lhs: Box<ExprTree<'de>>,
 }
+
+impl<'de> Eval for UnaryOp<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
 
 impl<'de> UnaryOp<'de> {
     pub fn new(op: UOp, lhs: Box<ExprTree<'de>>) -> Self {

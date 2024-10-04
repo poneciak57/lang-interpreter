@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt};
 
-use crate::token::format_num;
+use crate::{context::Value, evaluator::Eval, token::format_num};
 
 pub mod conop;
 pub mod fnblock;
@@ -30,6 +30,13 @@ pub enum Atom<'de> {
     Continue
 }
 
+impl<'de> Eval for Atom<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExprTree<'de> {
@@ -43,6 +50,13 @@ pub enum ExprTree<'de> {
     Loop(Loop<'de>),
     Var(VarDecl<'de>)
 }
+
+impl<'de> Eval for ExprTree<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
 
 impl fmt::Display for ExprTree<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

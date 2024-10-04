@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::{context::Value, evaluator::Eval};
+
 use super::ExprTree;
 
 
@@ -9,6 +11,13 @@ pub struct If<'de> {
     if_block: Box<ExprTree<'de>>,
     else_block: Option<Box<ExprTree<'de>>>
 }
+
+impl<'de> Eval for If<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
 
 impl<'de> If<'de> {
     pub fn new(cond: Box<ExprTree<'de>>, if_block: Box<ExprTree<'de>>, else_block: Option<Box<ExprTree<'de>>>) -> Self {

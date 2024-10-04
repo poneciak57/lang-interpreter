@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::{context::Value, evaluator::Eval};
+
 use super::ExprTree;
 
 
@@ -26,6 +28,12 @@ pub struct ConOp<'de> {
     op: Op,
     lhs: Box<ExprTree<'de>>,
     rhs: Box<ExprTree<'de>>
+}
+
+impl<'de> Eval for ConOp<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
 }
 
 impl<'de> ConOp<'de> {

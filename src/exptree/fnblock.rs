@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::context::Value;
+use crate::{context::Value, evaluator::Eval};
 
 use super::ExprTree;
 
@@ -9,6 +9,13 @@ pub struct FnBlock<'de> {
     ident: &'de str,
     args: Vec<&'de str>,
     block: Box<ExprTree<'de>>
+}
+
+impl<'de> Eval for FnBlock<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        // here we just add fn to context
+        todo!()
+    }
 }
 
 impl<'de> FnBlock<'de> {

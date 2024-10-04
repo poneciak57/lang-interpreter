@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::exptree::Atom;
+use crate::{context::Value, evaluator::Eval, exptree::Atom};
 
 use super::ExprTree;
 
@@ -11,6 +11,13 @@ pub struct Loop<'de> {
     step: Option<Box<ExprTree<'de>>>,
     block: Box<ExprTree<'de>>
 }
+
+impl<'de> Eval for Loop<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree) -> Value {
+        todo!()
+    }
+}
+
 
 impl<'de> Loop<'de> {
     pub fn new(condition: Box<ExprTree<'de>>, init: Option<Box<ExprTree<'de>>>, step: Option<Box<ExprTree<'de>>>, block: Box<ExprTree<'de>>) -> Self {
