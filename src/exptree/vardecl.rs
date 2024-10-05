@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval, exptree::Atom};
+use crate::{error::DefaultRuntimeError, evaluator::{Eval, Event, Value}, exptree::Atom};
 
 use super::ExprTree;
 
@@ -11,9 +11,15 @@ pub struct VarDecl<'de> {
     exp: Box<ExprTree<'de>>
 }
 
-impl<'de> Eval for VarDecl<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for VarDecl<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        let v = self.exp.eval(ctx)?;
+
+        if matches!(v, Value::Event(_)) {
+            return Err(DefaultRuntimeError {}.into()) // TODO change errors
+        }
+        ctx.insert(self.indent, v);
+        Ok(Value::Event(Event::NoVal))
     }
 }
 

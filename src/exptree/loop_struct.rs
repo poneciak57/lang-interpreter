@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval, exptree::Atom};
+use crate::{error::DefaultRuntimeError, evaluator::{Eval, Value}, exptree::Atom};
 
 use super::ExprTree;
 
@@ -13,9 +13,29 @@ pub struct Loop<'de> {
     block: Box<ExprTree<'de>>
 }
 
-impl<'de> Eval for Loop<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for Loop<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        let outer_scope = ctx.fork();
+        if let Some(ref init) = self.init {
+            init.eval(&outer_scope)?;
+        }
+
+        while self.condition.eval(&outer_scope)?.into() {
+            let b_val = self.block.eval(&outer_scope)?;
+            if let Value::Event(e) = b_val {
+                match e {
+                    crate::evaluator::Event::Continue => (),
+                    crate::evaluator::Event::Break(ret) => return Ok(*ret),
+                    crate::evaluator::Event::Return(_) => return Ok(Value::Event(e)),
+                    crate::evaluator::Event::NoVal => return Err(DefaultRuntimeError {}.into()), // TODO change error
+                }
+            }
+            if let Some(ref step) = self.step {
+                step.eval(&outer_scope)?;
+            }
+        }
+
+        Ok(Value::Nil)
     }
 }
 

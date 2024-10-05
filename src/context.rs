@@ -1,16 +1,9 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::exptree::{ExprTree, FnBlock};
+use miette::Error;
 
+use crate::{evaluator::Value, exptree::{ExprTree, FnBlock}};
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Value {
-    String(String),
-    Number(f64),
-    Bool(bool),
-    Nil,
-
-}
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Debug, PartialEq)]
@@ -39,7 +32,7 @@ impl<'de> CtxTree<'de> {
     /// ## Forks the tree
     /// forks the tree from current node, node will be dropped 
     /// if uts dropped and all child nodes are dropped
-    fn fork(&self) -> Self {
+    pub fn fork(&self) -> Self {
         let ctx: Context = Context {
             vars: HashMap::new(),
             funcs: HashMap::new(),
@@ -52,7 +45,7 @@ impl<'de> CtxTree<'de> {
     /// ## Searches for the variable in the context tree
     /// searches for the variable in current node and all the 
     /// parrent nodes up to the root
-    fn search(&self, name: &str) -> Option<Value> {
+    pub fn search(&self, name: &str) -> Option<Value> {
         let ctx = &self.0;
         if let Some(v) = ctx.borrow().vars.get(name) {
             return Some(v.clone())
@@ -65,15 +58,20 @@ impl<'de> CtxTree<'de> {
 
     // ## Inserts the new function
     // If the function with that name already exists it overides it
-    fn insert_fn(&self, name: &'de str,  fun: FnBlock<'de>) {
+    pub fn insert_fn(&self, name: &'de str,  fun: FnBlock<'de>) {
         let mut ctx = self.0.borrow_mut();
         ctx.funcs.insert(name.to_string(), fun);
+        *ctx = Context {
+            vars: HashMap::new(),
+            funcs: HashMap::new(),
+            prev: Some(self.clone())
+        }; // we update current ctx
     }
 
     // ## Executes function
     // executes function with given name and arguments
     // returns None if no function with given name exists in current scope
-    fn exec_fn(&self, name: &str, args: Vec<Value>) -> Option<Value> {
+    pub fn exec_fn(&self, name: &str, args: Vec<Value>) -> Option<Result<Value, Error>> {
         let ctx = &self.0;
         if let Some(f) = ctx.borrow().funcs.get(name) {
             return Some(f.exec(self, args));
@@ -87,7 +85,7 @@ impl<'de> CtxTree<'de> {
     /// ## Inserts the new value
     /// it inserts or owewrites the value in current node
     /// parrent nodes will not be able to search or update this variable
-    fn insert(&self, name: &str, value: Value) {
+    pub fn insert(&self, name: &str, value: Value) {
         let mut ctx = self.0.borrow_mut();
         ctx.vars.insert(name.to_string(), value);
     }
@@ -95,7 +93,7 @@ impl<'de> CtxTree<'de> {
     /// ## Uptades the value of the variable
     /// updates the value of the variable in current node or returns an 
     /// error if variable does not exists
-    fn set(&self, name: &str, value: Value) -> Result<(), CtxError> {
+    pub fn set(&self, name: &str, value: Value) -> Result<(), CtxError> {
         if self.0.borrow().vars.get(name).is_some() {
             self.0.borrow_mut().vars.insert(name.to_string(), value);
             Ok(())

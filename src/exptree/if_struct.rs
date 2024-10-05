@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval};
+use crate::{evaluator::Value, evaluator::Eval};
 
 use super::ExprTree;
 
@@ -13,9 +13,17 @@ pub struct If<'de> {
     else_block: Option<Box<ExprTree<'de>>>
 }
 
-impl<'de> Eval for If<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for If<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        if self.cond.eval(ctx)?.into() {
+            self.if_block.eval(ctx)
+        } else {
+            if let Some(ref else_block) = self.else_block {
+                else_block.eval(ctx)
+            } else {
+                Ok(Value::Nil)
+            }
+        }
     }
 }
 

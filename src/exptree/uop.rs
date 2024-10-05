@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval};
+use crate::{error::DefaultRuntimeError, evaluator::{Eval, Event, Value}};
 
 use super::ExprTree;
 
@@ -22,9 +22,23 @@ pub struct UnaryOp<'de> {
     lhs: Box<ExprTree<'de>>,
 }
 
-impl<'de> Eval for UnaryOp<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for UnaryOp<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        let v = self.lhs.eval(ctx)?;
+        if matches!(v, Value::Event(_)) {
+            return Err(DefaultRuntimeError {}.into()) // TODO change error
+        }
+        match self.op {
+            UOp::Minus => -v,
+            UOp::Bang => !v,
+            UOp::Print => {
+                print!("{}", v);
+                Ok(Value::Event(Event::NoVal))
+            },
+            UOp::Return => Ok(Value::Event(Event::Return(Box::new(v)))),
+            UOp::Break => Ok(Value::Event(Event::Break(Box::new(v)))),
+            UOp::Group => Ok(v),
+        }
     }
 }
 

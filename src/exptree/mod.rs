@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt};
 
-use crate::{context::Value, evaluator::Eval, token::format_num};
+use crate::{evaluator::{Event, Value}, error::DefaultRuntimeError, evaluator::Eval, token::format_num};
 
 pub mod conop;
 pub mod fnblock;
@@ -31,9 +31,16 @@ pub enum Atom<'de> {
     Continue
 }
 
-impl<'de> Eval for Atom<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error>  {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for Atom<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error>  {
+        match &self {
+            Atom::String(s) => Ok(Value::String(s.to_string())),
+            Atom::Number(n) => Ok(Value::Number(n.clone())),
+            Atom::Nil => Ok(Value::Nil),
+            Atom::Bool(b) => Ok(Value::Bool(b.clone())),
+            Atom::Ident(id) => Ok(ctx.search(id).ok_or(DefaultRuntimeError{})?), // TODO switch error
+            Atom::Continue => Ok(Value::Event(Event::Continue)),
+        }
     }
 }
 
@@ -52,9 +59,37 @@ pub enum ExprTree<'de> {
     Var(VarDecl<'de>)
 }
 
-impl<'de> Eval for ExprTree<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for ExprTree<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        match self {
+            ExprTree::Atom(a) => a.eval(ctx),
+            ExprTree::ConOp(cop) => cop.eval(ctx),
+            ExprTree::UnaryOp(uop) => uop.eval(ctx),
+            ExprTree::FnCall(fnc) => fnc.eval(ctx),
+            ExprTree::FnBlock(fnb) => fnb.eval(ctx),
+            ExprTree::If(iff) => iff.eval(ctx),
+            ExprTree::Loop(lop) => lop.eval(ctx),
+            ExprTree::Var(vd) => vd.eval(ctx),
+            ExprTree::Block(stmts, retexp) => {
+                let fork = ctx.fork();
+                for s in stmts {
+                    let v = s.eval(&fork)?;
+                    if !matches!(v, Value::Event(Event::NoVal)) {
+                        if let Value::Event(e) = v {
+                            return Ok(Value::Event(e));
+                        }
+                    }
+                }
+                if let Some(ref retexp) = retexp {
+                    let v = retexp.eval(ctx)?;
+                    if matches!(v, Value::Event(_)) {
+                        return Err(DefaultRuntimeError {}.into()); // TODO change error
+                    }
+                    return Ok(v)
+                }
+                return Ok(Value::Nil);
+            }
+        }
     }
 }
 

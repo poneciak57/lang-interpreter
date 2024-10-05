@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval};
+use crate::{context::CtxTree, error::DefaultRuntimeError, evaluator::{Eval, Event, Value}};
 
 use super::ExprTree;
 
@@ -12,10 +12,11 @@ pub struct FnBlock<'de> {
     block: Box<ExprTree<'de>>
 }
 
-impl<'de> Eval for FnBlock<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
+impl<'de: 'a, 'a> Eval<'a> for FnBlock<'de> {
+    fn eval(&self, ctx: &CtxTree<'a>) -> Result<Value, Error> {
         // here we just add fn to context
-        todo!()
+        ctx.insert_fn(self.ident, self.clone());
+        Ok(Value::Event(Event::NoVal))
     }
 }
 
@@ -24,9 +25,16 @@ impl<'de> FnBlock<'de> {
         Self { ident, args, block }
     }
 
-    pub fn exec(&self, ctx: &crate::context::CtxTree, args: Vec<Value>) -> Value {
-        // it will map names to the values and declare them on forked ctx
-        todo!()
+    pub fn exec(&self, ctx: &crate::context::CtxTree<'de>, args: Vec<Value>) -> Result<Value, Error> {
+        let fork = ctx.fork();
+        if self.args.len() != args.len() {
+            return Err(DefaultRuntimeError {}.into()) // TODO change error
+        }
+        for i in 0..args.len() {
+            fork.insert(self.args[i], args[i].clone());
+        }
+
+        self.block.eval(&fork)
     }
 }
 

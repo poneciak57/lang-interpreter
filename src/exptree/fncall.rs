@@ -1,7 +1,7 @@
 use std::fmt;
 use miette::Error;
 
-use crate::{context::Value, evaluator::Eval};
+use crate::{error::DefaultRuntimeError, evaluator::{Eval, Value}};
 
 use super::ExprTree;
 
@@ -11,9 +11,17 @@ pub struct FnCall<'de> {
     args: Vec<ExprTree<'de>>
 }
 
-impl<'de> Eval for FnCall<'de> {
-    fn eval(&self, ctx: &crate::context::CtxTree) -> Result<Value, Error> {
-        todo!()
+impl<'de: 'a, 'a> Eval<'a> for FnCall<'de> {
+    fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
+        let mut v_args = Vec::new();
+        for a in &self.args {
+            let v = a.eval(ctx)?;
+            if matches!(v, Value::Event(_)) {
+                return Err(DefaultRuntimeError {}.into()) // TODO change error
+            }
+            v_args.push(v);
+        }
+        ctx.exec_fn(self.ident, v_args).unwrap_or(Err(DefaultRuntimeError {}.into())) // TODO change error
     }
 }
 
