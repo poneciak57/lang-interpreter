@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use miette::Error;
 
-use crate::{evaluator::Value, exptree::{ExprTree, FnBlock}};
+use crate::{evaluator::Value, exptree::FnBlock};
 
 
 #[allow(non_camel_case_types)]

@@ -1,11 +1,11 @@
-use std::{fmt, ops::{Add, Neg, Not, Sub}};
+use std::{fmt, ops::{Add, Div, Mul, Neg, Not, Sub}};
 
 use miette::Error;
 
 use crate::{context::CtxTree, error::DefaultRuntimeError};
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Value {
     String(String),
     Number(f64),
@@ -15,7 +15,7 @@ pub enum Value {
     Event(Event),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Event {
     Continue,
     Break(Box<Value>),
@@ -38,6 +38,31 @@ pub trait Eval<'a> {
     fn eval(&self, ctx: &CtxTree<'a>) -> Result<Value, Error>;
 }
 
+
+impl Div for Value {
+    type Output = Result<Value, Error>;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 / n2)),
+            _ => Err(DefaultRuntimeError {}.into()) // TODO change error
+        }
+    }
+}
+
+impl Mul for Value {
+    type Output = Result<Value, Error>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 * n2)),
+            (Value::Number(n1), Value::Bool(b1)) => Ok(Value::Number(n1 * b1 as usize as f64)),
+            (Value::Bool(b1), Value::Number(n1)) => Ok(Value::Number(n1 * b1 as usize as f64)),
+            (Value::Bool(b1), Value::Bool(b2)) => Ok(Value::Number((b1 as usize * b2 as usize) as f64)),
+            _ => Err(DefaultRuntimeError {}.into()) // TODO change error
+        }
+    }
+}
 
 impl Add for Value {
     type Output = Result<Value, Error>;
