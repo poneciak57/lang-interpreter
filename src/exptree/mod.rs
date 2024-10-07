@@ -82,8 +82,12 @@ impl<'de: 'a, 'a> Eval<'a> for ExprTree<'de> {
                 }
                 if let Some(ref retexp) = retexp {
                     let v = retexp.eval(ctx)?;
-                    if matches!(v, Value::Event(_)) {
-                        return Err(DefaultRuntimeError {}.into()); // TODO change error
+                    if let Value::Event(e) = v {
+                        if e == Event::NoVal { 
+                            return Err(DefaultRuntimeError {}.into()); // TODO change error
+                        } else {
+                            return Ok(Value::Event(e));
+                        }
                     }
                     return Ok(v)
                 }

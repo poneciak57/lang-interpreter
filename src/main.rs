@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
-use lang_interpreter::{lexer::Lexer, parser::Parser as MyParser};
+use lang_interpreter::{context::CtxTree, evaluator::Eval, lexer::Lexer, parser::Parser as MyParser};
 use miette::{Context, IntoDiagnostic};
 
 #[derive(Debug, Subcommand)]
@@ -16,7 +16,7 @@ enum Commands {
         /// Path to a file that u want to parse
         filename: PathBuf
     },
-    /// Evaluates the input (It should be provided with single expression)
+    /// Evaluates single expression
     Eval {
         /// Path to a file that u want to evaluate
         filename: PathBuf
@@ -64,8 +64,28 @@ fn main() -> miette::Result<()> {
                 .join("\n");
             println!("{}", parsed_str)
         },
-        Commands::Eval { filename: _ } => todo!(),
-        Commands::Run { filename: _ } => todo!(),
+        Commands::Eval { filename} => {
+            let file_contents = fs::read_to_string(&filename)
+                .into_diagnostic()
+                .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
+            let mut parser = MyParser::new(&file_contents);
+            let expr_tree = parser.parse_expression_within(0)?;
+            let ctx = CtxTree::new();
+            let val = expr_tree.eval(&ctx)?;
+            println!("evaluation completed");
+            println!("result: {val}");
+        },
+        Commands::Run { filename } => {
+            let file_contents = fs::read_to_string(&filename)
+                .into_diagnostic()
+                .wrap_err_with(|| format!("reading '{}' failed", filename.display()))?;
+            let parser = MyParser::new(&file_contents);
+            let expr_list = parser.parse()?;
+            let ctx = CtxTree::new();
+            for expr in expr_list {
+                expr.eval(&ctx)?;
+            }
+        },
     }
 
     Ok(())

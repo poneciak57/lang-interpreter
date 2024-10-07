@@ -35,7 +35,7 @@ impl<'de: 'a, 'a> Eval<'a> for ConOp<'de> {
     fn eval(&self, ctx: &crate::context::CtxTree<'a>) -> Result<Value, Error> {
         if self.op == Op::Equal {
             return if let ExprTree::Atom(Atom::Ident(id)) = *self.lhs {
-                let set_res = ctx.set(id, self.lhs.eval(ctx)?);
+                let set_res = ctx.set(id, self.rhs.eval(ctx)?);
                 if set_res.is_err() { 
                     Err(DefaultRuntimeError {}.into()) // TODO change errors 
                 } else {
