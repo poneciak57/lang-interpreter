@@ -81,7 +81,7 @@ impl<'de: 'a, 'a> Eval<'a> for ExprTree<'de> {
                     }
                 }
                 if let Some(ref retexp) = retexp {
-                    let v = retexp.eval(ctx)?;
+                    let v = retexp.eval(&fork)?;
                     if let Value::Event(e) = v {
                         if e == Event::NoVal { 
                             return Err(DefaultRuntimeError {}.into()); // TODO change error

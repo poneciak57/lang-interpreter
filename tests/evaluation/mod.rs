@@ -3,6 +3,7 @@ use lang_interpreter::{context::CtxTree, evaluator::{Eval, Value}, parser::Parse
 use crate::test_expr_eval;
 
 pub mod math;
+pub mod variables;
 
 // #[test]
 // fn t1() {
