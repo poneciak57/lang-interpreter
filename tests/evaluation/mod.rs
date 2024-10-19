@@ -1,16 +1,10 @@
-use lang_interpreter::{
-    context::CtxTree,
-    evaluator::{Eval, Value},
-    parser::Parser,
-};
+use lang_interpreter::{context::CtxTree, evaluator::{Eval, Value}, parser::Parser};
 
 use crate::test_expr_eval;
 
-pub mod block;
 pub mod math;
 pub mod variables;
-
-// #[test]
+pub mod block;
 // fn t1() {
 //     let expr = "1 + 2 * 3";
 //     let mut parser = Parser::new(expr);
@@ -36,5 +30,5 @@ macro_rules! test_expr_eval {
             let val = exp_tree.eval(&ctx).unwrap();
             assert_eq!(val, $out);
         }
-    };
+    }
 }
