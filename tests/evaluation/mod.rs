@@ -1,7 +1,12 @@
-use lang_interpreter::{context::CtxTree, evaluator::{Eval, Value}, parser::Parser};
+use lang_interpreter::{
+    context::CtxTree,
+    evaluator::{Eval, Value},
+    parser::Parser,
+};
 
 use crate::test_expr_eval;
 
+pub mod block;
 pub mod math;
 pub mod variables;
 
@@ -31,5 +36,5 @@ macro_rules! test_expr_eval {
             let val = exp_tree.eval(&ctx).unwrap();
             assert_eq!(val, $out);
         }
-    }
+    };
 }
