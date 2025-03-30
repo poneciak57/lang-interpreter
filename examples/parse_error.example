@@ -1,0 +1,4 @@
+// we forgot the brace and interpreter will give us line of code and part of code that is incorrect
+if (1 == 2) {
+    print "ok";
+} else print "not ok";

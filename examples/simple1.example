@@ -1,0 +1,16 @@
+var a = 3;
+var b = 4;
+var c = if (a == b) {
+    "equal"
+} else {
+    "not equal"
+};
+
+// Yeah I know, this is not a good example
+// but language does not support casts and string to int concat
+print a;
+print " is ";
+print c;
+print " to ";
+print b;
+print "\n";

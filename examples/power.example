@@ -1,0 +1,9 @@
+fun pow(a, n) {
+    if (n == 0) { return 1; }
+    if (n == 1) { return a; }
+    return a * pow(a, n - 1);
+}
+
+print "3^0 = "; print pow(3, 0); print "\n";
+print "3^4 = "; print pow(3, 4); print "\n";
+print "2^12 = "; print pow(2, 12); print "\n";

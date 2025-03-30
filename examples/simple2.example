@@ -1,0 +1,7 @@
+fun add(a, b) {
+    a + b
+}
+
+print "3 + 2 = ";
+print add(3, 2);
+print "\n";

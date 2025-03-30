@@ -1,0 +1,11 @@
+
+var c = 1;
+
+{
+    var c = 2;
+    print c;
+    print "\n";
+}
+
+print c;
+print "\n";

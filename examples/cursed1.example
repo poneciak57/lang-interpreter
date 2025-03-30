@@ -1,0 +1,23 @@
+var a = 3;
+var b = 4;
+
+var c = {
+    if (a == b) {
+        "equal"
+    } else {
+        "not equal"
+    }
+};
+
+print c;
+print "\n";
+
+var d = while ( { a = a + 1; a != 7} ) {
+    b = b + 2;
+    if (b == 6) {
+        break "test"
+    }
+};
+
+print d;
+print "\n";

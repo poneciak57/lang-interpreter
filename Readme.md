@@ -11,6 +11,9 @@ These are main futures i want to support in the language.
 - functions
 - ~~lists~~
 
+# Project state
+This project is not fully polished, it lacks unit tests for evaluation of some language constructs even if they work. Parsing is finished tho.
+
 # Usage
 To run the interpreter type
 ```bash
@@ -18,3 +21,6 @@ To run the interpreter type
 ```
 where commands stands for: `tokenize|parse|eval|run` and the filepath points to the file with the code
 > You can always run help command or put the -h --help flag to see details
+
+# Examples
+Check examples [here](/examples/)
