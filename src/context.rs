@@ -61,11 +61,11 @@ impl<'de> CtxTree<'de> {
     pub fn insert_fn(&self, name: &'de str,  fun: FnBlock<'de>) {
         let mut ctx = self.0.borrow_mut();
         ctx.funcs.insert(name.to_string(), fun);
-        *ctx = Context {
-            vars: HashMap::new(),
-            funcs: HashMap::new(),
-            prev: Some(self.clone())
-        }; // we update current ctx
+        // *ctx = Context {
+        //     vars: HashMap::new(),
+        //     funcs: HashMap::new(),
+        //     prev: Some(self.clone())
+        // }; // we update current ctx
     }
 
     // ## Executes function

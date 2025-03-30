@@ -34,7 +34,16 @@ impl<'de> FnBlock<'de> {
             fork.insert(self.args[i], args[i].clone());
         }
 
-        self.block.eval(&fork)
+        let val = self.block.eval(&fork)?;
+        if let Value::Event(e) = val {
+            if let Event::Return(v) = e { 
+                return Ok(*v)
+            } else {
+                return Err(DefaultRuntimeError {}.into()) // TODO change error
+            }
+        } else {
+            return Ok(val)
+        }
     }
 }
 
